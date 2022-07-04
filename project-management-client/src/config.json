@@ -1,0 +1,5 @@
+{
+    "projectEndPoint":"http://localhost:8080/api/project",
+    "addProject":"/addProject",
+    "dashboard": "/dashboard"
+}

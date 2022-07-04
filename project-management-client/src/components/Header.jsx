@@ -1,4 +1,5 @@
-import React, { Component } from "react";
+import { Component } from "react";
+import config from "../config.json";
 
 class Header extends Component {
   render() {
@@ -16,24 +17,22 @@ class Header extends Component {
           >
             <span className="navbar-toggler-icon" />
           </button>
-
           <div className="collapse navbar-collapse" id="mobile-nav">
             <ul className="navbar-nav mr-auto">
               <li className="nav-item">
-                <a className="nav-link" href="/dashboard">
+                <a className="nav-link" href={config.dashboard}>
                   Dashboard
                 </a>
               </li>
             </ul>
-
             <ul className="navbar-nav ml-auto">
               <li className="nav-item">
-                <a className="nav-link " href="register.html">
+                <a className="nav-link " href="/">
                   Sign Up
                 </a>
               </li>
               <li className="nav-item">
-                <a className="nav-link" href="login.html">
+                <a className="nav-link" href="/">
                   Login
                 </a>
               </li>
