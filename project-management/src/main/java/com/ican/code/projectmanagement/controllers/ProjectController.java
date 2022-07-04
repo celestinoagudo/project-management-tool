@@ -18,6 +18,7 @@ import static org.springframework.http.HttpStatus.*;
 
 @RestController
 @RequestMapping("/api/project")
+@CrossOrigin
 public class ProjectController {
 
   private final ProjectService projectService;
