@@ -4,15 +4,20 @@ import { toast } from "react-toastify";
 const slice = createSlice({
   name: "entities",
   initialState: {
+    selectedProject: {
+      projectName: "",
+      projectIdentifier: "",
+      description: "",
+      startDate: "",
+      endDate: "",
+      id: "",
+    },
     projects: [],
     errors: [],
   },
   reducers: {
     projectAdded: (state, action) => {
       state.projects.push(action.payload.data);
-      // toast.success("Project Successfully Added !", {
-      //   position: toast.POSITION.TOP_LEFT,
-      // });
     },
     errorAdded: (state, action) => {
       const errorData = action.payload.data;
@@ -28,10 +33,16 @@ const slice = createSlice({
     },
     projectRemoved: (state, action) => {
       const filtered = state.projects.filter(
-        (project) =>
-          project.projectIdentifier !== action.payload.data.projectIdentifier
+        (project) => project.projectIdentifier !== action.payload.data
       );
       state.projects = filtered;
+    },
+    updateSelectedProjectOnChange: (state, action) => {
+      const { value, name } = action.payload.data;
+      state.selectedProject[name] = value;
+    },
+    updateSelectedProjectOnSubmit: (state, action) => {
+      state.selectedProject = action.payload.data;
     },
     errorsCleared: (state, action) => {
       state.errors = [];
@@ -45,6 +56,8 @@ export const {
   projectsLoaded,
   projectRemoved,
   errorsCleared,
+  updateSelectedProjectOnChange,
+  updateSelectedProjectOnSubmit,
 } = slice.actions;
 
 export default slice.reducer;

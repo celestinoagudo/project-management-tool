@@ -5,19 +5,26 @@ import "react-toastify/dist/ReactToastify.css";
 import config from "../config.json";
 import { getComponentWithParamsAndNavigate } from "../services/get-params-navigate";
 import { saveProject } from "../services/project-service";
-import { errorAdded, errorsCleared, projectAdded } from "../store/entities";
+import {
+  errorAdded,
+  errorsCleared,
+  projectAdded,
+  updateSelectedProjectOnChange,
+  updateSelectedProjectOnSubmit,
+} from "../store/entities";
 import TextArea from "./TextArea";
 import TextField from "./TextField";
 
-class AddProject extends Component {
+class ProjectInfoForm extends Component {
   constructor() {
     super();
-    this.state = {
+    this.emptyProject = {
       projectName: "",
       projectIdentifier: "",
       description: "",
       startDate: "",
       endDate: "",
+      id: "",
     };
     this.placeHolders = {
       namePlaceHolder: "Project Name",
@@ -28,47 +35,53 @@ class AddProject extends Component {
     this.onSubmit = this.onSubmit.bind(this);
   }
 
+  componentDidMount() {
+    const { selectedProject } = this.props;
+    this.setState(selectedProject);
+  }
+
   onChange(event) {
-    const { value, name } = event.target;
-    this.setState({ [name]: value });
+    const { updateSelectedProjectOnChange } = this.props;
+    updateSelectedProjectOnChange(event.target);
   }
 
   async onSubmit(event) {
     event.preventDefault();
-    const { projectAdded, errorAdded, errorsCleared, navigate } = this.props;
-    const { projectName, projectIdentifier, description, startDate, endDate } =
-      this.state;
-    const newProject = {
-      projectName,
-      projectIdentifier,
-      description,
-      startDate,
-      endDate,
-    };
+    const {
+      projectAdded,
+      errorAdded,
+      errorsCleared,
+      navigate,
+      selectedProject,
+      updateSelectedProjectOnSubmit,
+    } = this.props;
 
     try {
-      const { data: createdProject } = await saveProject(newProject);
+      const { data: createdProject } = await saveProject(selectedProject);
       errorsCleared();
       navigate(config.dashboard);
       projectAdded(createdProject);
+      updateSelectedProjectOnSubmit(this.emptyProject);
     } catch (error) {
       errorAdded(error.response.data);
     }
   }
 
   render() {
-    const { projectName, projectIdentifier, description, startDate, endDate } =
-      this.state;
     const { onChange, onSubmit, placeHolders } = this;
     const { namePlaceHolder, projectIdPlaceHolder, descriptionPlaceHolder } =
       placeHolders;
+    const { selectedProject } = this.props;
+    console.log("selected project", selectedProject);
+    const { projectName, projectIdentifier, description, startDate, endDate } =
+      selectedProject;
 
     return (
       <div className="project">
         <div className="container">
           <div className="row">
             <div className="col-md-8 m-auto">
-              <h5 className="display-4 text-center">Create Project form</h5>
+              <h5 className="display-4 text-center">Create Project</h5>
               <hr />
               <form onSubmit={onSubmit}>
                 <TextField
@@ -119,18 +132,26 @@ class AddProject extends Component {
   }
 }
 
-const mapStateToProps = (state) => ({
-  projects: state.entities.projects,
-  errors: state.entities.errors,
-});
+const mapStateToProps = (state) => {
+  const { projects, errors, selectedProject } = state.entities;
+  return {
+    projects,
+    errors,
+    selectedProject,
+  };
+};
 
 const mapDispatchToProps = (dispatch) => ({
   projectAdded: (data) => dispatch(projectAdded({ data })),
   errorAdded: (data) => dispatch(errorAdded({ data })),
   errorsCleared: (data) => dispatch(errorsCleared({ data })),
+  updateSelectedProjectOnChange: (data) =>
+    dispatch(updateSelectedProjectOnChange({ data })),
+  updateSelectedProjectOnSubmit: (data) =>
+    dispatch(updateSelectedProjectOnSubmit({ data })),
 });
 
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(getComponentWithParamsAndNavigate(AddProject));
+)(getComponentWithParamsAndNavigate(ProjectInfoForm));

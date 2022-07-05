@@ -1,10 +1,31 @@
 import { faEdit, faFlagCheckered } from "@fortawesome/free-solid-svg-icons";
 import { Component } from "react";
+import { connect } from "react-redux";
+import config from "../config.json";
+import { deleteProject } from "../services/project-service";
+import { projectRemoved } from "../store/entities";
 import Action from "./Action";
 
 class ProjectItem extends Component {
+  handleDelete = async (projectIdentifier) => {
+    const { projectRemoved } = this.props;
+    try {
+      projectRemoved(projectIdentifier);
+      await deleteProject(projectIdentifier);
+    } catch (error) {
+      if (
+        error.response &&
+        error.response.status >= 400 &&
+        error.response.status < 500
+      ) {
+        console.log(error.response.data);
+      }
+    }
+  };
+
   render() {
     const { projectIdentifer, projectName, projectDescription } = this.props;
+    const { handleDelete } = this;
 
     return (
       <div className="container">
@@ -26,16 +47,17 @@ class ProjectItem extends Component {
                   customClasses="board text-primary"
                 />
                 <Action
-                  redirectTo="/"
+                  redirectTo={config.projectInfo}
                   actionIcon={faEdit}
                   displayText="Update Project"
                   customClasses="update text-success"
                 />
                 <Action
-                  redirectTo="/"
+                  redirectTo="#"
                   actionIcon={faFlagCheckered}
                   displayText="Delete Project"
                   customClasses="delete text-danger"
+                  onClick={() => handleDelete(projectIdentifer)}
                 />
               </ul>
             </div>
@@ -46,4 +68,16 @@ class ProjectItem extends Component {
   }
 }
 
-export default ProjectItem;
+const mapStateToProps = (state) => {
+  const { projects, errors } = state.entities;
+  return {
+    projects,
+    errors,
+  };
+};
+
+const mapDispatchToProps = (dispatch) => ({
+  projectRemoved: (data) => dispatch(projectRemoved({ data })),
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(ProjectItem);
