@@ -1,9 +1,15 @@
 import { faEdit, faFlagCheckered } from "@fortawesome/free-solid-svg-icons";
 import { Component } from "react";
 import { connect } from "react-redux";
+import { toast, ToastContainer } from "react-toastify";
 import config from "../config.json";
+import { getComponentWithParamsAndNavigate } from "../services/get-params-navigate";
 import { deleteProject } from "../services/project-service";
-import { projectRemoved } from "../store/entities";
+import {
+  getProjectByIdentifier,
+  projectRemoved,
+  updateSelectedProject,
+} from "../store/entities";
 import Action from "./Action";
 
 class ProjectItem extends Component {
@@ -18,14 +24,25 @@ class ProjectItem extends Component {
         error.response.status >= 400 &&
         error.response.status < 500
       ) {
-        console.log(error.response.data);
+        toast.error(error.response.data, {
+          position: toast.POSITION.TOP_RIGHT,
+        });
       }
     }
   };
 
+  handleUpdate = (projectIdentifier) => {
+    const { getProjectByIdentifier, updateSelectedProject, navigate } =
+      this.props;
+    const selectedProjects = getProjectByIdentifier(projectIdentifier);
+    const project = selectedProjects.length && selectedProjects[0];
+    updateSelectedProject(project);
+    navigate(config.projectInfo);
+  };
+
   render() {
     const { projectIdentifer, projectName, projectDescription } = this.props;
-    const { handleDelete } = this;
+    const { handleDelete, handleUpdate } = this;
 
     return (
       <div className="container">
@@ -47,10 +64,10 @@ class ProjectItem extends Component {
                   customClasses="board text-primary"
                 />
                 <Action
-                  redirectTo={config.projectInfo}
                   actionIcon={faEdit}
                   displayText="Update Project"
                   customClasses="update text-success"
+                  onClick={() => handleUpdate(projectIdentifer)}
                 />
                 <Action
                   redirectTo="#"
@@ -63,6 +80,7 @@ class ProjectItem extends Component {
             </div>
           </div>
         </div>
+        <ToastContainer autoClose={2000} />
       </div>
     );
   }
@@ -73,11 +91,17 @@ const mapStateToProps = (state) => {
   return {
     projects,
     errors,
+    getProjectByIdentifier: (projectIdentifier) =>
+      getProjectByIdentifier(projectIdentifier)(state),
   };
 };
 
 const mapDispatchToProps = (dispatch) => ({
   projectRemoved: (data) => dispatch(projectRemoved({ data })),
+  updateSelectedProject: (data) => dispatch(updateSelectedProject({ data })),
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(ProjectItem);
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(getComponentWithParamsAndNavigate(ProjectItem));

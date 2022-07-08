@@ -8,80 +8,79 @@ import { saveProject } from "../services/project-service";
 import {
   errorAdded,
   errorsCleared,
-  projectAdded,
+  projectSaved,
+  updateSelectedProject,
   updateSelectedProjectOnChange,
-  updateSelectedProjectOnSubmit,
 } from "../store/entities";
+import formConstants from "./component-constants/project-info-form.json";
 import TextArea from "./TextArea";
 import TextField from "./TextField";
 
 class ProjectInfoForm extends Component {
-  constructor() {
-    super();
-    this.emptyProject = {
-      projectName: "",
-      projectIdentifier: "",
-      description: "",
-      startDate: "",
-      endDate: "",
-      id: "",
-    };
-    this.placeHolders = {
-      namePlaceHolder: "Project Name",
-      projectIdPlaceHolder: "Unique Project ID",
-      descriptionPlaceHolder: "Project Description",
-    };
-    this.onChange = this.onChange.bind(this);
-    this.onSubmit = this.onSubmit.bind(this);
-  }
+  emptyProject = formConstants.emptyProject;
+  placeHolders = formConstants.placeHolders;
 
   componentDidMount() {
     const { selectedProject } = this.props;
     this.setState(selectedProject);
   }
 
-  onChange(event) {
+  onChange = (event) => {
     const { updateSelectedProjectOnChange } = this.props;
     updateSelectedProjectOnChange(event.target);
-  }
+  };
 
-  async onSubmit(event) {
+  onSubmit = async (event) => {
     event.preventDefault();
     const {
-      projectAdded,
+      projectSaved,
       errorAdded,
       errorsCleared,
       navigate,
       selectedProject,
-      updateSelectedProjectOnSubmit,
+      updateSelectedProject,
     } = this.props;
 
     try {
-      const { data: createdProject } = await saveProject(selectedProject);
+      const { data: savedProject } = await saveProject(selectedProject);
       errorsCleared();
       navigate(config.dashboard);
-      projectAdded(createdProject);
-      updateSelectedProjectOnSubmit(this.emptyProject);
+      projectSaved(savedProject);
+      updateSelectedProject(this.emptyProject);
     } catch (error) {
       errorAdded(error.response.data);
     }
+  };
+
+  getFormTitle(id) {
+    return +id > 0 ? (
+      <h5 className="display-4 text-center">Update Project</h5>
+    ) : (
+      <h5 className="display-4 text-center">Create Project</h5>
+    );
   }
 
   render() {
-    const { onChange, onSubmit, placeHolders } = this;
+    const { onChange, onSubmit, placeHolders, getFormTitle } = this;
     const { namePlaceHolder, projectIdPlaceHolder, descriptionPlaceHolder } =
       placeHolders;
     const { selectedProject } = this.props;
-    console.log("selected project", selectedProject);
-    const { projectName, projectIdentifier, description, startDate, endDate } =
-      selectedProject;
+
+    const {
+      id,
+      projectName,
+      projectIdentifier,
+      description,
+      startDate = "",
+      endDate = "",
+    } = selectedProject;
 
     return (
       <div className="project">
         <div className="container">
           <div className="row">
             <div className="col-md-8 m-auto">
-              <h5 className="display-4 text-center">Create Project</h5>
+              {getFormTitle(id)}
               <hr />
               <form onSubmit={onSubmit}>
                 <TextField
@@ -90,6 +89,7 @@ class ProjectInfoForm extends Component {
                   name="projectName"
                   controlledBy={projectName}
                   valueChangedHandler={onChange}
+                  isDisabled={false}
                 />
                 <TextField
                   type="text"
@@ -97,6 +97,7 @@ class ProjectInfoForm extends Component {
                   name="projectIdentifier"
                   controlledBy={projectIdentifier}
                   valueChangedHandler={onChange}
+                  isDisabled={+id > 0}
                 />
                 <TextArea
                   placeHolder={descriptionPlaceHolder}
@@ -110,6 +111,7 @@ class ProjectInfoForm extends Component {
                   name="startDate"
                   controlledBy={startDate}
                   valueChangedHandler={onChange}
+                  isDisabled={false}
                 />
                 <h6>Estimated End Date</h6>
                 <TextField
@@ -117,6 +119,7 @@ class ProjectInfoForm extends Component {
                   name="endDate"
                   controlledBy={endDate}
                   valueChangedHandler={onChange}
+                  isDisabled={false}
                 />
                 <input
                   type="submit"
@@ -142,13 +145,12 @@ const mapStateToProps = (state) => {
 };
 
 const mapDispatchToProps = (dispatch) => ({
-  projectAdded: (data) => dispatch(projectAdded({ data })),
+  projectSaved: (data) => dispatch(projectSaved({ data })),
   errorAdded: (data) => dispatch(errorAdded({ data })),
   errorsCleared: (data) => dispatch(errorsCleared({ data })),
   updateSelectedProjectOnChange: (data) =>
     dispatch(updateSelectedProjectOnChange({ data })),
-  updateSelectedProjectOnSubmit: (data) =>
-    dispatch(updateSelectedProjectOnSubmit({ data })),
+  updateSelectedProject: (data) => dispatch(updateSelectedProject({ data })),
 });
 
 export default connect(

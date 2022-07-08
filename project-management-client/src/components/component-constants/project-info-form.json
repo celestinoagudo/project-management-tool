@@ -1,0 +1,15 @@
+{
+  "emptyProject": {
+    "projectName": "",
+    "projectIdentifier": "",
+    "description": "",
+    "startDate": "",
+    "endDate": "",
+    "id": ""
+  },
+  "placeHolders": {
+    "namePlaceHolder": "Project Name",
+    "projectIdPlaceHolder": "Unique Project ID",
+    "descriptionPlaceHolder": "Project Description"
+  }
+}

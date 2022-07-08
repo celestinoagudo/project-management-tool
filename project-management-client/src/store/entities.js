@@ -1,5 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
+import { createSelector } from "reselect";
 
 const slice = createSlice({
   name: "entities",
@@ -16,12 +17,19 @@ const slice = createSlice({
     errors: [],
   },
   reducers: {
-    projectAdded: (state, action) => {
-      state.projects.push(action.payload.data);
+    projectSaved: (state, action) => {
+      const { data: projectToSave } = action.payload;
+      let { projects } = state;
+      const filtered = state.projects.filter(
+        (project) => project.id !== projectToSave.id
+      );
+      projects = filtered;
+      projects.push(projectToSave);
     },
     errorAdded: (state, action) => {
-      const errorData = action.payload.data;
-      state.errors.push(errorData);
+      const { data: errorData } = action.payload;
+      const { errors } = state;
+      errors.push(errorData);
       for (const errorMessage of Object.values(errorData)) {
         toast.error(errorMessage, {
           position: toast.POSITION.TOP_RIGHT,
@@ -41,7 +49,7 @@ const slice = createSlice({
       const { value, name } = action.payload.data;
       state.selectedProject[name] = value;
     },
-    updateSelectedProjectOnSubmit: (state, action) => {
+    updateSelectedProject: (state, action) => {
       state.selectedProject = action.payload.data;
     },
     errorsCleared: (state, action) => {
@@ -50,14 +58,25 @@ const slice = createSlice({
   },
 });
 
+export const getProjectByIdentifier = (projectIdentifier) =>
+  createSelector(
+    (state) => state.entities.projects,
+    (projects) =>
+      projects.filter((project) =>
+        project.projectIdentifier
+          .toLowerCase()
+          .includes(projectIdentifier.toLowerCase())
+      )
+  );
+
 export const {
-  projectAdded,
+  projectSaved,
   errorAdded,
   projectsLoaded,
   projectRemoved,
   errorsCleared,
   updateSelectedProjectOnChange,
-  updateSelectedProjectOnSubmit,
+  updateSelectedProject,
 } = slice.actions;
 
 export default slice.reducer;

@@ -2,8 +2,17 @@ import { Component } from "react";
 class TextField extends Component {
   state = {};
   render() {
-    const { type, placeHolder, name, controlledBy, valueChangedHandler } =
-      this.props;
+    let {
+      type,
+      placeHolder,
+      name,
+      controlledBy,
+      valueChangedHandler,
+      isDisabled,
+    } = this.props;
+
+    controlledBy = controlledBy || "";
+
     return (
       <div className="mb-3">
         <input
@@ -13,6 +22,7 @@ class TextField extends Component {
           name={name}
           value={controlledBy}
           onChange={valueChangedHandler}
+          disabled={isDisabled && "disabled"}
         />
       </div>
     );
