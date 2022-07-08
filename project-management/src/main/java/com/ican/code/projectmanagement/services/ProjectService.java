@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.function.UnaryOperator;
 
 import static com.ican.code.projectmanagement.constants.ErrorMessages.PROJECT_IDENTIFIER_EXISTS;
 import static com.ican.code.projectmanagement.constants.ErrorMessages.PROJECT_IDENTIFIER_NOT_FOUND;
@@ -42,15 +44,21 @@ public class ProjectService {
 
   public Project saveOrUpdateProject(Project project) {
 
-    projectRepository
-        .findByProjectIdentifier(project.getProjectIdentifier())
-        .ifPresent(
-            existingProject -> {
-              throw new ProjectManagementException(
-                  format(PROJECT_IDENTIFIER_EXISTS, existingProject.getProjectIdentifier()));
-            });
+    UnaryOperator<Project> validateAndSave =
+        projectToSave -> {
+          projectRepository
+              .findByProjectIdentifier(projectToSave.getProjectIdentifier())
+              .ifPresent(
+                  existingProject -> {
+                    if (Objects.equals(existingProject.getId(), project.getId())) return;
+                    throw new ProjectManagementException(
+                        format(PROJECT_IDENTIFIER_EXISTS, existingProject.getProjectIdentifier()));
+                  });
 
-    return projectRepository.save(project);
+          return projectRepository.save(projectToSave);
+        };
+
+    return validateAndSave.apply(project);
   }
 
   private Project getProjectByIdentifier(String projectIdentifier) {
