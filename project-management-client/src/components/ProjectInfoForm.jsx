@@ -71,8 +71,8 @@ class ProjectInfoForm extends Component {
       projectName,
       projectIdentifier,
       description,
-      startDate = "",
-      endDate = "",
+      startDate,
+      endDate,
     } = selectedProject;
 
     return (
