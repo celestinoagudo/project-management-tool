@@ -2,15 +2,9 @@ import { Component } from "react";
 class TextField extends Component {
   state = {};
   render() {
-    let {
-      type,
-      placeHolder,
-      name,
-      controlledBy,
-      valueChangedHandler,
-      isDisabled,
-    } = this.props;
-
+    const { type, placeHolder, name, valueChangedHandler, isDisabled } =
+      this.props;
+    let { controlledBy } = this.props;
     controlledBy = controlledBy || "";
 
     return (

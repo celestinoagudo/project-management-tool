@@ -1,5 +1,7 @@
 import { faEdit, faFlagCheckered } from "@fortawesome/free-solid-svg-icons";
 import { Component } from "react";
+import { confirmAlert } from "react-confirm-alert";
+import "react-confirm-alert/src/react-confirm-alert.css";
 import { connect } from "react-redux";
 import { toast, ToastContainer } from "react-toastify";
 import config from "../config.json";
@@ -14,21 +16,37 @@ import Action from "./Action";
 
 class ProjectItem extends Component {
   handleDelete = async (projectIdentifier) => {
-    const { projectRemoved } = this.props;
-    try {
-      projectRemoved(projectIdentifier);
-      await deleteProject(projectIdentifier);
-    } catch (error) {
-      if (
-        error.response &&
-        error.response.status >= 400 &&
-        error.response.status < 500
-      ) {
-        toast.error(error.response.data, {
-          position: toast.POSITION.TOP_RIGHT,
-        });
-      }
-    }
+    confirmAlert({
+      title: "Confirm to delete",
+      message:
+        "Are you sure you want to delete this Project? This can't be undone",
+      buttons: [
+        {
+          label: "Proceed",
+          onClick: async () => {
+            const { projectRemoved } = this.props;
+            try {
+              projectRemoved(projectIdentifier);
+              await deleteProject(projectIdentifier);
+            } catch (error) {
+              if (
+                error.response &&
+                error.response.status >= 400 &&
+                error.response.status < 500
+              ) {
+                toast.error(error.response.data, {
+                  position: toast.POSITION.TOP_RIGHT,
+                });
+              }
+            }
+          },
+        },
+        {
+          label: "Cancel",
+          onClick: () => {},
+        },
+      ],
+    });
   };
 
   handleUpdate = (projectIdentifier) => {

@@ -1,18 +1,12 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
 import { createSelector } from "reselect";
+import projectInfoFormConstants from "../components/component-constants/project-info-form.json";
 
 const slice = createSlice({
   name: "entities",
   initialState: {
-    selectedProject: {
-      projectName: "",
-      projectIdentifier: "",
-      description: "",
-      startDate: "",
-      endDate: "",
-      id: "",
-    },
+    selectedProject: projectInfoFormConstants.emptyProject,
     projects: [],
     errors: [],
   },
