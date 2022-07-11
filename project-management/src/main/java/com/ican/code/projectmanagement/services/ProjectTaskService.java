@@ -27,6 +27,7 @@ public class ProjectTaskService {
   @Autowired
   public ProjectTaskService(
       BacklogRepository backlogRepository, ProjectTaskRepository projectTaskRepository) {
+
     this.backlogRepository = backlogRepository;
     this.projectTaskRepository = projectTaskRepository;
   }
@@ -34,16 +35,9 @@ public class ProjectTaskService {
   public ProjectTask saveProjectTask(
       final String projectIdentifier, final ProjectTask projectTask) {
 
-    Backlog backlog =
-        backlogRepository
-            .findByProjectIdentifier(projectIdentifier)
-            .orElseThrow(
-                () ->
-                    new ProjectManagementException(
-                        format(PROJECT_IDENTIFIER_NOT_FOUND, projectIdentifier)));
-
+    final Backlog backlog = getBacklog(projectIdentifier);
     projectTask.setBacklog(backlog);
-    Integer backlogSequence =
+    int backlogSequence =
         isNull(backlog.getProjectTaskSequence()) ? 0 : backlog.getProjectTaskSequence();
     projectTask.setProjectSequence(
         format(projectIdentifier.concat("-%s"), valueOf(++backlogSequence)));
@@ -54,5 +48,15 @@ public class ProjectTaskService {
     if (isBlank(projectTask.getStatus())) projectTask.setStatus(Status.TODO.key);
 
     return projectTaskRepository.save(projectTask);
+  }
+
+  private Backlog getBacklog(final String projectIdentifier) {
+
+    return backlogRepository
+        .findByProjectIdentifier(projectIdentifier)
+        .orElseThrow(
+            () ->
+                new ProjectManagementException(
+                    format(PROJECT_IDENTIFIER_NOT_FOUND, projectIdentifier)));
   }
 }

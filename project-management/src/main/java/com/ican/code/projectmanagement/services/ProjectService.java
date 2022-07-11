@@ -1,5 +1,6 @@
 package com.ican.code.projectmanagement.services;
 
+import com.google.gson.Gson;
 import com.ican.code.projectmanagement.domain.Backlog;
 import com.ican.code.projectmanagement.domain.Project;
 import com.ican.code.projectmanagement.exceptions.ProjectManagementException;
@@ -30,9 +31,9 @@ public class ProjectService {
     this.backlogRepository = backlogRepository;
   }
 
-  public Project findByProjectIdentifier(String projectIdentifier) {
+  public Project findByProjectIdentifier(final String projectIdentifier) {
 
-    return getProjectByIdentifier(projectIdentifier);
+    return getProjectByIdentifierStrict(projectIdentifier);
   }
 
   public List<Project> findAll() {
@@ -40,68 +41,35 @@ public class ProjectService {
     return projectRepository.findAll();
   }
 
-  public Project deleteProjectByIdentifier(String projectIdentifier) {
+  public Project deleteProjectByIdentifier(final String projectIdentifier) {
 
-    Project project = getProjectByIdentifier(projectIdentifier);
+    Project project = getProjectByIdentifierStrict(projectIdentifier);
     projectRepository.deleteById(project.getId());
 
     return project;
   }
 
-  public Project saveOrUpdateProject(Project project) {
+  public Project saveOrUpdateProject(final Project project) {
 
     UnaryOperator<Project> validateAndSave =
         projectToSave -> {
           projectToSave.setProjectIdentifier(projectToSave.getProjectIdentifier().toUpperCase());
-          projectRepository
-              .findByProjectIdentifier(projectToSave.getProjectIdentifier())
-              .ifPresent(
-                  existingProject -> {
-                    if (Objects.equals(existingProject.getId(), project.getId())) return;
-                    throw new ProjectManagementException(
-                        format(PROJECT_IDENTIFIER_EXISTS, existingProject.getProjectIdentifier()));
-                  });
+          final Project existingProject =
+              getProjectByIdentifierPermissive(projectToSave.getProjectIdentifier());
 
-          final Project projectWithBacklog =
-              projectRepository
-                  .findById(isNull(projectToSave.getId()) ? MIN_VALUE : projectToSave.getId())
-                  .orElseGet(
-                      () -> {
-                        final Backlog backlog =
-                            backlogRepository
-                                .findByProjectIdentifier(projectToSave.getProjectIdentifier())
-                                .orElseGet(
-                                    () -> {
-                                      return Backlog.builder()
-                                          .project(projectToSave)
-                                          .projectIdentifier(projectToSave.getProjectIdentifier())
-                                          .build();
-                                    });
+          if (!isNull(existingProject)
+              && !Objects.equals(existingProject.getId(), project.getId())) {
+            throw new ProjectManagementException(
+                format(PROJECT_IDENTIFIER_EXISTS, existingProject.getProjectIdentifier()));
+          }
 
-                        final Project withBacklog =
-                            Project.builder()
-                                .id(projectToSave.getId())
-                                .projectName(projectToSave.getProjectName())
-                                .projectIdentifier(projectToSave.getProjectIdentifier())
-                                .description(projectToSave.getDescription())
-                                .startDate(projectToSave.getStartDate())
-                                .endDate(projectToSave.getEndDate())
-                                .createdAt(projectToSave.getCreatedAt())
-                                .backlog(backlog)
-                                .build();
-
-                        backlog.setProject(withBacklog);
-
-                        return withBacklog;
-                      });
-
-          return projectRepository.save(projectWithBacklog);
+          return projectRepository.save(getProjectWithBacklogAssociation(projectToSave));
         };
 
     return validateAndSave.apply(project);
   }
 
-  private Project getProjectByIdentifier(String projectIdentifier) {
+  private Project getProjectByIdentifierStrict(final String projectIdentifier) {
 
     return projectRepository
         .findByProjectIdentifier(projectIdentifier)
@@ -109,5 +77,37 @@ public class ProjectService {
             () ->
                 new ProjectManagementException(
                     format(PROJECT_IDENTIFIER_NOT_FOUND, projectIdentifier)));
+  }
+
+  private Project getProjectByIdentifierPermissive(final String projectIdentifier) {
+
+    return projectRepository.findByProjectIdentifier(projectIdentifier).orElse(null);
+  }
+
+  private Backlog getBacklogByIdentifier(final Project projectToSave) {
+
+    return backlogRepository
+        .findByProjectIdentifier(projectToSave.getProjectIdentifier())
+        .orElseGet(
+            () ->
+                Backlog.builder().projectIdentifier(projectToSave.getProjectIdentifier()).build());
+  }
+
+  private Project getProjectWithBacklogAssociation(final Project projectToSave) {
+
+    final Project project =
+        projectRepository
+            .findById(isNull(projectToSave.getId()) ? MIN_VALUE : projectToSave.getId())
+            .orElseGet(
+                () -> {
+                  Gson cloneUtility = new Gson();
+                  return cloneUtility.fromJson(cloneUtility.toJson(projectToSave), Project.class);
+                });
+
+    final Backlog backlog = getBacklogByIdentifier(projectToSave);
+    project.setBacklog(backlog);
+    backlog.setProject(project);
+
+    return project;
   }
 }
