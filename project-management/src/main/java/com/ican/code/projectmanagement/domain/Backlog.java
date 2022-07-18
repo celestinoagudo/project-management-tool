@@ -19,7 +19,7 @@ public class Backlog {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  private Integer projectTaskSequence = 0;
+  private Integer projectTaskSequence;
   private String projectIdentifier;
 
   @OneToOne(fetch = FetchType.EAGER)
@@ -27,8 +27,17 @@ public class Backlog {
   @JsonIgnore
   private Project project;
 
-  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "backlog")
+  @OneToMany(
+      cascade = CascadeType.REFRESH,
+      fetch = FetchType.EAGER,
+      mappedBy = "backlog",
+      orphanRemoval = true)
   private List<ProjectTask> projectTasks;
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(getId(), getProjectIdentifier(), getProject());
+  }
 
   @Override
   public boolean equals(Object o) {
@@ -39,10 +48,5 @@ public class Backlog {
         && Objects.equals(getProjectTaskSequence(), backlog.getProjectTaskSequence())
         && Objects.equals(getProjectIdentifier(), backlog.getProjectIdentifier())
         && Objects.equals(getProject(), backlog.getProject());
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(getId(), getProjectIdentifier(), getProject());
   }
 }

@@ -20,7 +20,7 @@ public class ProjectTask {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column(updatable = false)
+  @Column(updatable = false, unique = true)
   private String projectSequence;
 
   @NotBlank(message = "Please include a project summary")
@@ -33,13 +33,27 @@ public class ProjectTask {
   private LocalDate createdAt;
   private LocalDate updatedAt;
 
-  @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.REFRESH)
-  @JoinColumn(name = "backlog_id")
+  @ManyToOne(fetch = FetchType.EAGER)
+  @JoinColumn(name = "backlog_id", updatable = false, nullable = false)
   @JsonIgnore
   private Backlog backlog;
 
   @Column(updatable = false)
   private String projectIdentifier;
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(
+        getId(),
+        getProjectSequence(),
+        getSummary(),
+        getAcceptanceCriteria(),
+        getStatus(),
+        getPriority(),
+        getDueDate(),
+        getCreatedAt(),
+        getProjectIdentifier());
+  }
 
   @Override
   public boolean equals(Object o) {
@@ -54,23 +68,7 @@ public class ProjectTask {
         && Objects.equals(getPriority(), that.getPriority())
         && Objects.equals(getDueDate(), that.getDueDate())
         && Objects.equals(getCreatedAt(), that.getCreatedAt())
-        && Objects.equals(getUpdatedAt(), that.getUpdatedAt())
         && Objects.equals(getProjectIdentifier(), that.getProjectIdentifier());
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(
-        getId(),
-        getProjectSequence(),
-        getSummary(),
-        getAcceptanceCriteria(),
-        getStatus(),
-        getPriority(),
-        getDueDate(),
-        getCreatedAt(),
-        getUpdatedAt(),
-        getProjectIdentifier());
   }
 
   @Override
