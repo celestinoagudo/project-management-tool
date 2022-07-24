@@ -42,10 +42,10 @@ class ProjectInfoForm extends Component {
     } = this.props;
 
     try {
-      const { data: savedProject } = await saveProject(selectedProject);
+      const { data: response } = await saveProject(selectedProject);
       errorsCleared();
       navigate(config.dashboard);
-      projectSaved(savedProject);
+      projectSaved(response);
       updateSelectedProject(this.emptyProject);
     } catch (error) {
       errorAdded(error.response.data);
