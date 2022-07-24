@@ -65,7 +65,7 @@ public class ProjectController {
   public ResponseEntity<CustomApplicationResponse> findAll() {
 
     return applicationResponseMappingService.getApplicationResponse(
-        "Successfully fetched all records", projectService.findAll(), FOUND);
+        "Successfully fetched all records", projectService.findAll(), OK);
   }
 
   @DeleteMapping("/{projectIdentifier}")
